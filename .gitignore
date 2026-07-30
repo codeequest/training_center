@@ -23,3 +23,9 @@ npm-debug.log*
 *.tsbuildinfo
 .DS_Store
 Thumbs.db
+
+# Comptes de test locaux
+COMPTES-TEST.md
+
+# Configuration locale Claude Code
+.claude/

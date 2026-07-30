@@ -19,10 +19,14 @@ export class ApiRequestError extends Error {
 }
 
 export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise<T> {
+  // Pas d'en-tête JSON forcé pour un FormData (upload de support) : le navigateur
+  // doit poser lui-même le Content-Type multipart avec sa frontière.
+  const isFormData = typeof FormData !== 'undefined' && init.body instanceof FormData;
+
   const response = await fetch(`${API_URL}${path}`, {
     ...init,
     headers: {
-      'Content-Type': 'application/json',
+      ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
       ...init.headers,
     },
   });
