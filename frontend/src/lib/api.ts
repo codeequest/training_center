@@ -1,5 +1,8 @@
 export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000/api';
 
+/** Origine du serveur API, sans le préfixe /api — sert à résoudre les fichiers statiques (/uploads/...). */
+export const API_ORIGIN = API_URL.replace(/\/api\/?$/, '');
+
 export interface ApiError {
   error: string;
   details?: { field: string; message: string }[];

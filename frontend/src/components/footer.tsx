@@ -50,8 +50,7 @@ export default function Footer({ locale, t }: { locale: Locale; t: Dictionary })
           <ul className="mt-4 space-y-2.5 text-sm text-ink-muted">
             {courses.map((course) => (
               <li key={course.slug}>
-                {/* Les pages de détail par formation arrivent à l'étape suivante. */}
-                <Link href={`/${locale}/courses`} className="hover:text-brand-700">
+                <Link href={`/${locale}/courses/${course.slug}`} className="hover:text-brand-700">
                   {course.title[locale]}
                 </Link>
               </li>
