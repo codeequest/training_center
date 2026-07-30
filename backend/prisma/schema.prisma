@@ -1,0 +1,253 @@
+// Schéma de données du centre de formation
+// Modèle clé : un Course est le programme (vendu plusieurs fois),
+// une Session est une exécution datée de ce programme.
+// Une inscription (Enrollment) porte sur une SESSION, pas sur un Course.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  STUDENT
+  TEACHER
+  ADMIN
+}
+
+enum Level {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+}
+
+enum SessionMode {
+  ONSITE
+  ONLINE
+  HYBRID
+}
+
+enum SessionStatus {
+  PLANNED
+  OPEN
+  FULL
+  RUNNING
+  DONE
+  CANCELLED
+}
+
+enum EnrollmentStatus {
+  REQUESTED
+  CONFIRMED
+  PAID
+  COMPLETED
+  CANCELLED
+}
+
+enum MaterialType {
+  PDF
+  SLIDES
+  LINK
+  VIDEO
+}
+
+enum Visibility {
+  ENROLLED
+  PUBLIC
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  role         Role     @default(STUDENT)
+  firstName    String
+  lastName     String
+  phone        String?
+  avatarUrl    String?
+  locale       String   @default("fr")
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  teacherProfile   TeacherProfile?
+  enrollments      Enrollment[]
+  taughtSessions   Session[]        @relation("SessionTeacher")
+  uploadedMaterials Material[]      @relation("MaterialUploader")
+
+  @@index([role])
+}
+
+model TeacherProfile {
+  id             String   @id @default(cuid())
+  userId         String   @unique
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  headlineFr     String
+  headlineEn     String
+  bioFr          String   @db.Text
+  bioEn          String   @db.Text
+  certifications String[] @default([])
+  linkedinUrl    String?
+  yearsExperience Int     @default(0)
+  isPublished    Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model Course {
+  id              String   @id @default(cuid())
+  slug            String   @unique
+  titleFr         String
+  titleEn         String
+  summaryFr       String
+  summaryEn       String
+  descriptionFr   String   @db.Text
+  descriptionEn   String   @db.Text
+  audienceFr      String   @db.Text
+  audienceEn      String   @db.Text
+  prerequisitesFr String   @db.Text
+  prerequisitesEn String   @db.Text
+  level           Level    @default(BEGINNER)
+  durationHours   Int
+  price           Decimal  @db.Decimal(10, 2)
+  currency        String   @default("TND")
+  coverImageUrl   String?
+  accentColor     String   @default("#0F766E")
+  isPublished     Boolean  @default(true)
+  sortOrder       Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  modules   Module[]
+  sessions  Session[]
+  materials Material[]
+
+  @@index([isPublished])
+}
+
+model Module {
+  id            String  @id @default(cuid())
+  courseId      String
+  course        Course  @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  position      Int
+  titleFr       String
+  titleEn       String
+  descriptionFr String  @db.Text
+  descriptionEn String  @db.Text
+
+  @@unique([courseId, position])
+}
+
+model Session {
+  id         String        @id @default(cuid())
+  courseId   String
+  course     Course        @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  teacherId  String?
+  teacher    User?         @relation("SessionTeacher", fields: [teacherId], references: [id], onDelete: SetNull)
+  startDate  DateTime
+  endDate    DateTime
+  scheduleFr String
+  scheduleEn String
+  mode       SessionMode   @default(ONSITE)
+  location   String?
+  meetingUrl String?
+  capacity   Int           @default(15)
+  status     SessionStatus @default(OPEN)
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+
+  enrollments Enrollment[]
+  materials   Material[]
+
+  @@index([courseId, startDate])
+  @@index([status])
+}
+
+model Enrollment {
+  id        String           @id @default(cuid())
+  sessionId String
+  session   Session          @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  // Nullable : une demande publique existe avant la création du compte étudiant.
+  studentId String?
+  student   User?            @relation(fields: [studentId], references: [id], onDelete: SetNull)
+
+  status    EnrollmentStatus @default(REQUESTED)
+
+  // Coordonnées saisies dans le formulaire public
+  requesterName  String
+  requesterEmail String
+  requesterPhone String?
+  company        String?
+  message        String?  @db.Text
+
+  adminNotes  String?   @db.Text
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  confirmedAt DateTime?
+  completedAt DateTime?
+
+  certificate Certificate?
+
+  @@unique([sessionId, studentId])
+  @@index([status])
+  @@index([requesterEmail])
+}
+
+model Material {
+  id         String       @id @default(cuid())
+  courseId   String?
+  course     Course?      @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  sessionId  String?
+  session    Session?     @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  uploaderId String?
+  uploader   User?        @relation("MaterialUploader", fields: [uploaderId], references: [id], onDelete: SetNull)
+
+  title      String
+  type       MaterialType @default(PDF)
+  fileUrl    String
+  fileSize   Int?
+  visibility Visibility   @default(ENROLLED)
+  createdAt  DateTime     @default(now())
+
+  @@index([sessionId])
+  @@index([courseId])
+}
+
+model Certificate {
+  id           String     @id @default(cuid())
+  enrollmentId String     @unique
+  enrollment   Enrollment @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+  serialNumber String     @unique
+  issuedAt     DateTime   @default(now())
+  pdfUrl       String?
+}
+
+model ContactMessage {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  phone     String?
+  subject   String
+  body      String   @db.Text
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([isRead])
+}
+
+model Testimonial {
+  id          String   @id @default(cuid())
+  authorName  String
+  authorRole  String
+  avatarUrl   String?
+  quoteFr     String   @db.Text
+  quoteEn     String   @db.Text
+  rating      Int      @default(5)
+  isPublished Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+}
