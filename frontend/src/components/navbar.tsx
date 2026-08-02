@@ -84,9 +84,15 @@ export default function Navbar({ locale, t }: NavbarProps) {
           <LocaleSwitcher current={locale} hrefFor={localeHref} label={t.nav.languageLabel} />
           <Link
             href={`/${locale}/login`}
-            className="rounded-lg bg-brand-700 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-brand-800"
+            className="rounded-md px-3 py-2 text-sm font-medium text-ink-muted transition-colors hover:bg-slate-50 hover:text-ink"
           >
             {t.nav.login}
+          </Link>
+          <Link
+            href={`/${locale}/register`}
+            className="rounded-lg bg-brand-700 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-brand-800"
+          >
+            {t.nav.register}
           </Link>
         </div>
 
@@ -137,12 +143,20 @@ export default function Navbar({ locale, t }: NavbarProps) {
 
           <div className="container-page flex items-center justify-between gap-3 border-t border-slate-100 py-4">
             <LocaleSwitcher current={locale} hrefFor={localeHref} label={t.nav.languageLabel} />
-            <Link
-              href={`/${locale}/login`}
-              className="rounded-lg bg-brand-700 px-4 py-2.5 text-sm font-semibold text-white"
-            >
-              {t.nav.login}
-            </Link>
+            <div className="flex items-center gap-2">
+              <Link
+                href={`/${locale}/login`}
+                className="rounded-lg border border-slate-300 px-3.5 py-2.5 text-sm font-semibold text-ink"
+              >
+                {t.nav.login}
+              </Link>
+              <Link
+                href={`/${locale}/register`}
+                className="rounded-lg bg-brand-700 px-3.5 py-2.5 text-sm font-semibold text-white"
+              >
+                {t.nav.register}
+              </Link>
+            </div>
           </div>
         </div>
       )}

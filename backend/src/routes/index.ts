@@ -9,6 +9,7 @@ import * as teachers from '../controllers/teachers.controller';
 import * as contact from '../controllers/contact.controller';
 import * as materials from '../controllers/materials.controller';
 import * as users from '../controllers/users.controller';
+import * as students from '../controllers/students.controller';
 import * as misc from '../controllers/misc.controller';
 
 import { requireAuth, requireRole } from '../middleware/auth';
@@ -67,8 +68,12 @@ router.post(
 
 // ------------------------------------------------- Espace stagiaire
 router.get('/me/enrollments', requireRole('STUDENT', 'ADMIN'), enrollments.listMyEnrollments);
+router.get('/me/dashboard', requireRole('STUDENT'), students.getMyDashboard);
 router.get('/me/materials', requireAuth, materials.listMyMaterials);
 router.get('/certificates/:id/download', requireAuth, enrollments.downloadCertificate);
+
+// ------------------------------------------- Étudiants (lecture admin + formateur)
+router.get('/students', requireRole('ADMIN', 'TEACHER'), students.listStudentsOverview);
 
 // ------------------------------------------------- Espace formateur
 router.get('/me/sessions', requireRole('TEACHER', 'ADMIN'), sessions.listMySessions);

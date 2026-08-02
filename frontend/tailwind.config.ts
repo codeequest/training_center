@@ -31,9 +31,20 @@ const config: Config = {
           from: { opacity: '0', transform: 'translateY(16px)' },
           to: { opacity: '1', transform: 'translateY(0)' },
         },
+        'scale-in': {
+          from: { opacity: '0', transform: 'scale(.85)' },
+          to: { opacity: '1', transform: 'scale(1)' },
+        },
+        shake: {
+          '0%, 100%': { transform: 'translateX(0)' },
+          '25%': { transform: 'translateX(-4px)' },
+          '75%': { transform: 'translateX(4px)' },
+        },
       },
       animation: {
         'fade-up': 'fade-up .6s cubic-bezier(.16,1,.3,1) both',
+        'scale-in': 'scale-in .45s cubic-bezier(.16,1,.3,1) both',
+        shake: 'shake .3s ease-in-out',
       },
     },
   },

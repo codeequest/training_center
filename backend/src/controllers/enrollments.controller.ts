@@ -8,13 +8,21 @@ import { env } from '../config/env';
 import { asyncHandler } from '../utils/asyncHandler';
 import { badRequest, conflict, forbidden, notFound } from '../utils/errors';
 
+// Chiffres, espaces et +()- uniquement ; entre 6 et 20 caractères (aligné sur
+// la contrainte CHECK de la table SQL "etudiants").
+const PHONE_REGEX = /^\+?[0-9 ()-]{6,20}$/;
+
 export const enrollmentRequestSchema = z.object({
   sessionId: z.string().cuid("Session invalide."),
-  requesterName: z.string().min(2, 'Nom trop court.').max(120),
-  requesterEmail: z.string().email('Adresse email invalide.'),
-  requesterPhone: z.string().min(6, 'Numéro de téléphone trop court.').max(30).optional(),
-  company: z.string().max(160).optional(),
-  message: z.string().max(2000).optional(),
+  requesterName: z.string().trim().min(2, 'Nom trop court.').max(120),
+  requesterEmail: z.string().trim().toLowerCase().email('Adresse email invalide.').max(255),
+  requesterPhone: z
+    .string()
+    .trim()
+    .regex(PHONE_REGEX, 'Numéro de téléphone invalide.')
+    .max(30),
+  company: z.string().trim().max(160).optional(),
+  message: z.string().trim().max(2000).optional(),
   // Champ leurre : rempli uniquement par les robots.
   website: z.string().max(0).optional(),
 });
