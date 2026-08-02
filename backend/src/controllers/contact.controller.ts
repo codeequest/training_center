@@ -10,7 +10,7 @@ export const contactSchema = z.object({
   phone: z.string().max(30).optional(),
   subject: z.string().min(3, 'Sujet trop court.').max(200),
   body: z.string().min(10, 'Votre message est trop court.').max(4000),
-  website: z.string().max(0).optional(), // champ leurre anti-robot
+  website: z.string().optional(), // champ leurre anti-robot
 });
 
 /** Le message est enregistré en base ET envoyé par email : rien n'est perdu si le SMTP tombe. */
