@@ -2,7 +2,7 @@ import { Level } from '@prisma/client';
 import { z } from 'zod';
 import { prisma } from '../lib/prisma';
 import { asyncHandler } from '../utils/asyncHandler';
-import { notFound } from '../utils/errors';
+import { badRequest, notFound } from '../utils/errors';
 
 const moduleSchema = z.object({
   position: z.number().int().min(1),
@@ -98,10 +98,25 @@ export const getPublicCourse = asyncHandler(async (req, res) => {
 
 // --- Administration ---
 
+/**
+ * Forme unique d'une formation côté back-office. Toutes les routes qui renvoient
+ * une formation à l'administration partagent cet `include` : le front type ses
+ * réponses avec `AdminCourse` (`_count` compris) et plante au rendu si une
+ * création ou une modification renvoie un objet plus pauvre que la liste.
+ *
+ * Les modules en font partie : le formulaire d'édition s'initialise à partir de
+ * cet objet, et sans eux il renverrait un programme vide qui effacerait les
+ * modules existants à l'enregistrement.
+ */
+const adminCourseInclude = {
+  _count: { select: { sessions: true, modules: true } },
+  modules: { orderBy: { position: 'asc' } },
+} as const;
+
 export const listAllCourses = asyncHandler(async (_req, res) => {
   const courses = await prisma.course.findMany({
     orderBy: [{ sortOrder: 'asc' }, { createdAt: 'desc' }],
-    include: { _count: { select: { sessions: true, modules: true } } },
+    include: adminCourseInclude,
   });
   res.json({ courses });
 });
@@ -115,7 +130,7 @@ export const createCourse = asyncHandler(async (req, res) => {
       price,
       modules: { create: modules },
     },
-    include: { modules: { orderBy: { position: 'asc' } } },
+    include: adminCourseInclude,
   });
 
   res.status(201).json({ course });
@@ -134,7 +149,7 @@ export const updateCourse = asyncHandler(async (req, res) => {
     return tx.course.update({
       where: { id },
       data: rest,
-      include: { modules: { orderBy: { position: 'asc' } } },
+      include: adminCourseInclude,
     });
   });
 
@@ -142,6 +157,22 @@ export const updateCourse = asyncHandler(async (req, res) => {
 });
 
 export const deleteCourse = asyncHandler(async (req, res) => {
-  await prisma.course.delete({ where: { id: req.params.id } });
+  const { id } = req.params;
+
+  // La cascade en base va de Course vers Sessions, Inscriptions puis Attestations :
+  // sans ce garde-fou, supprimer une formation effacerait silencieusement des
+  // attestations déjà délivrées et casserait leur vérification publique.
+  const [sessionCount, enrollmentCount] = await Promise.all([
+    prisma.session.count({ where: { courseId: id } }),
+    prisma.enrollment.count({ where: { session: { courseId: id } } }),
+  ]);
+
+  if (sessionCount > 0) {
+    throw badRequest(
+      `Impossible de supprimer : ${sessionCount} session(s) et ${enrollmentCount} inscription(s) y sont rattachées. Dépubliez la formation à la place.`
+    );
+  }
+
+  await prisma.course.delete({ where: { id } });
   res.json({ message: 'Formation supprimée.' });
 });

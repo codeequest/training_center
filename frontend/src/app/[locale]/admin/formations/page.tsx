@@ -279,7 +279,14 @@ function CourseForm({
     try {
       const payload: CourseInput = { ...values, coverImageUrl: values.coverImageUrl || null };
       if (existing) {
-        const { course } = await updateCourse(existing.id, payload);
+        // `modules` absent du payload = « ne touche pas au programme ». On ne l'envoie
+        // que si le formulaire a bien chargé les modules existants, sinon un
+        // enregistrement anodin (le tarif, par exemple) les effacerait tous.
+        const { modules, ...rest } = payload;
+        const { course } = await updateCourse(
+          existing.id,
+          existing.modules ? payload : rest
+        );
         onUpdated?.(course);
       } else {
         const { course } = await createCourse(payload);
