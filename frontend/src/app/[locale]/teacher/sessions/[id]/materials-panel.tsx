@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react';
 
-import { apiFetch, ApiRequestError } from '@/lib/api';
+import { apiFetch, ApiRequestError, resolveFileUrl } from '@/lib/api';
 import type { Dictionary } from '@/i18n/dictionaries';
 import type { Material, MaterialType, Visibility } from '../../types';
 import { materialTypeClasses, formatFileSize } from '../../ui';
@@ -104,7 +104,7 @@ export default function MaterialsPanel({
 
                 <div className="flex items-center gap-3">
                   <a
-                    href={material.fileUrl.startsWith('http') ? material.fileUrl : material.fileUrl}
+                    href={resolveFileUrl(material.fileUrl)}
                     target="_blank"
                     rel="noreferrer"
                     className="text-sm font-semibold text-brand-700 hover:underline"
