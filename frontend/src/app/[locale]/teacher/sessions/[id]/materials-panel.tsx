@@ -276,14 +276,16 @@ function MaterialForm({
         </div>
 
         {isFileType ? (
-          <div>
+          // La clé empêche React de réutiliser le même <input> entre les deux branches :
+          // le champ fichier est non contrôlé, le champ URL est contrôlé.
+          <div key="material-file-field">
             <label className="field-label" htmlFor="material-file">
               {t.teacher.session.materials.fileLabel}
             </label>
             <input id="material-file" ref={fileInputRef} type="file" className="field-input file:mr-3 file:rounded-md file:border-0 file:bg-brand-50 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-brand-700" />
           </div>
         ) : (
-          <div>
+          <div key="material-url-field">
             <label className="field-label" htmlFor="material-url">
               {t.teacher.session.materials.urlLabel}
             </label>
