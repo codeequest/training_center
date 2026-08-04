@@ -13,7 +13,14 @@ export const materialMetaSchema = z.object({
   courseId: z.string().cuid().optional(),
   type: z.nativeEnum(MaterialType).default(MaterialType.PDF),
   visibility: z.nativeEnum(Visibility).default(Visibility.ENROLLED),
-  fileUrl: z.string().url().max(1000).optional(), // pour type LINK ou VIDEO
+  fileUrl: z
+    .string()
+    .url()
+    .max(1000)
+    .refine((value) => /^https?:\/\//i.test(value), {
+      message: 'URL invalide : seuls les liens http:// ou https:// sont acceptés.',
+    })
+    .optional(), // pour type LINK ou VIDEO
 });
 
 /** Le formateur assigné à la session, ou un admin. */

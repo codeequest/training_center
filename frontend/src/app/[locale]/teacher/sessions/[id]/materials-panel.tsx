@@ -193,11 +193,12 @@ function MaterialForm({
       }
       formData.append('file', file);
     } else {
-      if (!url.trim()) {
+      const trimmedUrl = url.trim();
+      if (!trimmedUrl || !/^https?:\/\//i.test(trimmedUrl)) {
         setError(t.teacher.session.materials.urlRequired);
         return;
       }
-      formData.append('fileUrl', url.trim());
+      formData.append('fileUrl', trimmedUrl);
     }
 
     setSubmitting(true);
