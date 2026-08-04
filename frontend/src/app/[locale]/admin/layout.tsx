@@ -9,7 +9,6 @@ import {
   CalendarIcon,
   DocumentIcon,
   GridIcon,
-  LogoutIcon,
   MailIcon,
   SpinnerIcon,
   UsersIcon,
@@ -75,11 +74,6 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [locale]);
 
-  function logout() {
-    clearToken();
-    router.replace(`/${locale}/login`);
-  }
-
   if (status !== 'ready' || !user) {
     return (
       <div className="grid min-h-[60vh] place-items-center bg-slate-50">
@@ -125,10 +119,6 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                 </p>
               </div>
             </div>
-            <button type="button" onClick={logout} className="btn-secondary text-sm">
-              <LogoutIcon />
-              {t.admin.logout}
-            </button>
           </div>
 
           <nav className="container-page flex gap-1 overflow-x-auto pb-3">

@@ -2,10 +2,12 @@
 
 import { AnimatePresence, motion } from 'framer-motion';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
+import { useCallback, useEffect, useState } from 'react';
 
 import Logo from './logo';
+import { ApiRequestError } from '@/lib/api';
+import { clearToken, fetchCurrentUser, getToken, type CurrentUser } from '@/lib/auth-client';
 import { locales, type Locale } from '@/i18n/config';
 import type { Dictionary } from '@/i18n/dictionaries';
 
@@ -14,10 +16,75 @@ interface NavbarProps {
   t: Dictionary;
 }
 
+/** État de session tel que l'en-tête public le connaît. */
+type Session =
+  | { status: 'checking' }
+  | { status: 'guest' }
+  | { status: 'authed'; user: CurrentUser };
+
+/** Page d'accueil de l'espace personnel correspondant au rôle. */
+function accountHref(locale: Locale, role: CurrentUser['role']): string {
+  if (role === 'ADMIN') return `/${locale}/admin`;
+  if (role === 'TEACHER') return `/${locale}/teacher`;
+  return `/${locale}/student`;
+}
+
 export default function Navbar({ locale, t }: NavbarProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  // 'checking' au premier rendu (serveur comme client) : évite toute divergence d'hydratation
+  // et surtout d'afficher « Connexion » l'espace d'un instant à un utilisateur déjà connecté.
+  const [session, setSession] = useState<Session>({ status: 'checking' });
+
+  const readSession = useCallback(() => {
+    if (!getToken()) {
+      setSession({ status: 'guest' });
+      return () => {};
+    }
+
+    let cancelled = false;
+    fetchCurrentUser()
+      .then(({ user }) => {
+        if (!cancelled) setSession({ status: 'authed', user });
+      })
+      .catch((error: unknown) => {
+        if (cancelled) return;
+        // Seul un jeton refusé justifie de fermer la session : une API injoignable
+        // ou une erreur serveur ne doit pas déconnecter l'utilisateur.
+        if (error instanceof ApiRequestError && (error.status === 401 || error.status === 403)) {
+          clearToken();
+          setSession({ status: 'guest' });
+          return;
+        }
+        setSession({ status: 'checking' });
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Revalidé à chaque changement de route : l'en-tête reflète immédiatement
+  // une connexion ou une déconnexion faite ailleurs dans l'application.
+  useEffect(() => readSession(), [pathname, readSession]);
+
+  // Connexion ou déconnexion depuis un autre onglet.
+  useEffect(() => {
+    const onStorage = (event: StorageEvent) => {
+      if (event.key === null || event.key === 'token') readSession();
+    };
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
+  }, [readSession]);
+
+  const logout = useCallback(() => {
+    clearToken();
+    setSession({ status: 'guest' });
+    setIsOpen(false);
+    router.push(`/${locale}`);
+  }, [locale, router]);
 
   const links = [
     { href: `/${locale}`, label: t.nav.home },
@@ -83,12 +150,32 @@ export default function Navbar({ locale, t }: NavbarProps) {
 
         <div className="hidden items-center gap-3 md:flex">
           <LocaleSwitcher current={locale} hrefFor={localeHref} label={t.nav.languageLabel} />
-          <Link
-            href={`/${locale}/login`}
-            className="rounded-lg bg-brand-700 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-brand-800"
-          >
-            {t.nav.login}
-          </Link>
+          {session.status === 'checking' ? (
+            <span aria-hidden className="h-9 w-28 animate-pulse rounded-lg bg-slate-100" />
+          ) : session.status === 'authed' ? (
+            <>
+              <Link
+                href={accountHref(locale, session.user.role)}
+                className="rounded-lg bg-brand-700 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-brand-800"
+              >
+                {t.nav.myAccount}
+              </Link>
+              <button
+                type="button"
+                onClick={logout}
+                className="rounded-lg px-3 py-2 text-sm font-medium text-ink-muted transition-colors hover:bg-slate-50 hover:text-ink"
+              >
+                {t.nav.logout}
+              </button>
+            </>
+          ) : (
+            <Link
+              href={`/${locale}/login`}
+              className="rounded-lg bg-brand-700 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-brand-800"
+            >
+              {t.nav.login}
+            </Link>
+          )}
         </div>
 
         {/* Bascule mobile */}
@@ -154,12 +241,32 @@ export default function Navbar({ locale, t }: NavbarProps) {
 
             <div className="container-page flex items-center justify-between gap-3 border-t border-slate-100 py-4">
               <LocaleSwitcher current={locale} hrefFor={localeHref} label={t.nav.languageLabel} />
-              <Link
-                href={`/${locale}/login`}
-                className="rounded-lg bg-brand-700 px-4 py-2.5 text-sm font-semibold text-white"
-              >
-                {t.nav.login}
-              </Link>
+              {session.status === 'checking' ? (
+                <span aria-hidden className="h-10 w-28 animate-pulse rounded-lg bg-slate-100" />
+              ) : session.status === 'authed' ? (
+                <div className="flex items-center gap-2">
+                  <Link
+                    href={accountHref(locale, session.user.role)}
+                    className="rounded-lg bg-brand-700 px-4 py-2.5 text-sm font-semibold text-white"
+                  >
+                    {t.nav.myAccount}
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={logout}
+                    className="rounded-lg px-3 py-2.5 text-sm font-medium text-ink-muted"
+                  >
+                    {t.nav.logout}
+                  </button>
+                </div>
+              ) : (
+                <Link
+                  href={`/${locale}/login`}
+                  className="rounded-lg bg-brand-700 px-4 py-2.5 text-sm font-semibold text-white"
+                >
+                  {t.nav.login}
+                </Link>
+              )}
             </div>
           </motion.div>
         )}

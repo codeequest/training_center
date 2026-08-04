@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname, useParams, useRouter } from 'next/navigation';
 import { useEffect, useState, type ReactNode } from 'react';
 
-import { BookIcon, DocumentIcon, GridIcon, LogoutIcon, SpinnerIcon, UserIcon } from '@/components/icons';
+import { BookIcon, DocumentIcon, GridIcon, SpinnerIcon, UserIcon } from '@/components/icons';
 import { MotionDiv } from '@/components/motion-primitives';
 import { clearToken, fetchCurrentUser, getToken, type CurrentUser } from '@/lib/auth-client';
 import { isLocale, type Locale } from '@/i18n/config';
@@ -55,11 +55,6 @@ export default function StudentLayout({ children }: { children: ReactNode }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [locale]);
 
-  function logout() {
-    clearToken();
-    router.replace(`/${locale}/login`);
-  }
-
   if (status !== 'ready' || !user) {
     return (
       <div className="grid min-h-[60vh] place-items-center bg-slate-50">
@@ -103,10 +98,6 @@ export default function StudentLayout({ children }: { children: ReactNode }) {
                 </p>
               </div>
             </div>
-            <button type="button" onClick={logout} className="btn-secondary text-sm">
-              <LogoutIcon />
-              {t.student.logout}
-            </button>
           </div>
 
           <nav className="container-page flex gap-1 overflow-x-auto pb-3">
