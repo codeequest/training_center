@@ -133,6 +133,20 @@ export const listMyEnrollments = asyncHandler(async (req, res) => {
 
 // --- Pipeline administrateur ---
 
+/**
+ * Forme unique d'une inscription côté back-office. La modification doit renvoyer
+ * exactement ce que renvoie la liste : le front remplace la ligne affichée par la
+ * réponse, et un objet plus pauvre ferait disparaître de l'écran le stagiaire et
+ * l'attestation déjà émise.
+ */
+const adminEnrollmentInclude = {
+  student: { select: { id: true, firstName: true, lastName: true, email: true } },
+  certificate: { select: { id: true, serialNumber: true } },
+  session: {
+    include: { course: { select: { id: true, slug: true, titleFr: true, titleEn: true } } },
+  },
+} as const;
+
 export const listEnrollments = asyncHandler(async (req, res) => {
   const { status, sessionId, search } = req.query as Record<string, string | undefined>;
 
@@ -151,13 +165,7 @@ export const listEnrollments = asyncHandler(async (req, res) => {
         : {}),
     },
     orderBy: { createdAt: 'desc' },
-    include: {
-      student: { select: { id: true, firstName: true, lastName: true, email: true } },
-      certificate: { select: { id: true, serialNumber: true } },
-      session: {
-        include: { course: { select: { id: true, slug: true, titleFr: true, titleEn: true } } },
-      },
-    },
+    include: adminEnrollmentInclude,
   });
 
   res.json({ enrollments });
@@ -182,7 +190,7 @@ export const updateEnrollment = asyncHandler(async (req, res) => {
       ...(status === 'CONFIRMED' && !existing.confirmedAt ? { confirmedAt: new Date() } : {}),
       ...(status === 'COMPLETED' && !existing.completedAt ? { completedAt: new Date() } : {}),
     },
-    include: { session: { include: { course: true } } },
+    include: adminEnrollmentInclude,
   });
 
   if (status === 'CONFIRMED' && existing.status !== 'CONFIRMED') {

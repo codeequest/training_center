@@ -29,6 +29,17 @@ const teacherSelect = {
   select: { id: true, firstName: true, lastName: true, avatarUrl: true },
 } as const;
 
+/**
+ * Forme unique d'une session côté back-office, partagée par la liste, la création
+ * et la modification : le front type ses réponses avec `AdminSession` (`_count`
+ * compris) et plante au rendu si une écriture renvoie un objet plus pauvre.
+ */
+const adminSessionInclude = {
+  course: { select: { id: true, slug: true, titleFr: true, titleEn: true } },
+  teacher: teacherSelect,
+  _count: { select: { enrollments: true } },
+} as const;
+
 /** Sessions ouvertes à l'inscription, toutes formations confondues. */
 export const listUpcomingSessions = asyncHandler(async (_req, res) => {
   const sessions = await prisma.session.findMany({
@@ -52,11 +63,7 @@ export const listAllSessions = asyncHandler(async (req, res) => {
       ...(status && status in SessionStatus ? { status: status as SessionStatus } : {}),
     },
     orderBy: { startDate: 'desc' },
-    include: {
-      course: { select: { id: true, slug: true, titleFr: true, titleEn: true } },
-      teacher: teacherSelect,
-      _count: { select: { enrollments: true } },
-    },
+    include: adminSessionInclude,
   });
   res.json({ sessions });
 });
@@ -86,7 +93,7 @@ export const createSession = asyncHandler(async (req, res) => {
 
   const session = await prisma.session.create({
     data,
-    include: { course: true, teacher: teacherSelect },
+    include: adminSessionInclude,
   });
   res.status(201).json({ session });
 });
@@ -105,7 +112,7 @@ export const updateSession = asyncHandler(async (req, res) => {
   const session = await prisma.session.update({
     where: { id: req.params.id },
     data,
-    include: { course: true, teacher: teacherSelect },
+    include: adminSessionInclude,
   });
   res.json({ session });
 });
