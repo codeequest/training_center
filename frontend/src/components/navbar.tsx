@@ -1,5 +1,6 @@
 'use client';
 
+import { AnimatePresence, motion } from 'framer-motion';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -100,52 +101,69 @@ export default function Navbar({ locale, t }: NavbarProps) {
           className="grid h-10 w-10 place-items-center rounded-lg border border-slate-300 text-ink md:hidden"
         >
           <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-            {isOpen ? (
-              <>
-                <path d="m5 5 14 14" />
-                <path d="m19 5-14 14" />
-              </>
-            ) : (
-              <>
-                <path d="M4 7h16" />
-                <path d="M4 12h16" />
-                <path d="M4 17h16" />
-              </>
-            )}
+            <motion.path
+              d="M4 7h16"
+              animate={isOpen ? { d: 'm5 5 14 14', opacity: 1 } : { d: 'M4 7h16', opacity: 1 }}
+              transition={{ duration: 0.2 }}
+            />
+            <motion.path
+              d="M4 12h16"
+              animate={isOpen ? { opacity: 0 } : { opacity: 1 }}
+              transition={{ duration: 0.15 }}
+            />
+            <motion.path
+              d="M4 17h16"
+              animate={isOpen ? { d: 'm19 5-14 14', opacity: 1 } : { d: 'M4 17h16', opacity: 1 }}
+              transition={{ duration: 0.2 }}
+            />
           </svg>
         </button>
       </nav>
 
       {/* Panneau mobile */}
-      {isOpen && (
-        <div id="mobile-menu" className="border-t border-slate-200 bg-white md:hidden">
-          <ul className="container-page flex flex-col py-2">
-            {links.map((link) => (
-              <li key={link.href}>
-                <Link
-                  href={link.href}
-                  aria-current={isActive(link.href) ? 'page' : undefined}
-                  className={`block rounded-md px-3 py-3 text-sm font-medium ${
-                    isActive(link.href) ? 'bg-brand-50 text-brand-700' : 'text-ink-muted'
-                  }`}
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            id="mobile-menu"
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+            className="overflow-hidden border-t border-slate-200 bg-white md:hidden"
+          >
+            <ul className="container-page flex flex-col py-2">
+              {links.map((link, index) => (
+                <motion.li
+                  key={link.href}
+                  initial={{ opacity: 0, x: -12 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.2, delay: index * 0.05 }}
                 >
-                  {link.label}
-                </Link>
-              </li>
-            ))}
-          </ul>
+                  <Link
+                    href={link.href}
+                    aria-current={isActive(link.href) ? 'page' : undefined}
+                    className={`block rounded-md px-3 py-3 text-sm font-medium ${
+                      isActive(link.href) ? 'bg-brand-50 text-brand-700' : 'text-ink-muted'
+                    }`}
+                  >
+                    {link.label}
+                  </Link>
+                </motion.li>
+              ))}
+            </ul>
 
-          <div className="container-page flex items-center justify-between gap-3 border-t border-slate-100 py-4">
-            <LocaleSwitcher current={locale} hrefFor={localeHref} label={t.nav.languageLabel} />
-            <Link
-              href={`/${locale}/login`}
-              className="rounded-lg bg-brand-700 px-4 py-2.5 text-sm font-semibold text-white"
-            >
-              {t.nav.login}
-            </Link>
-          </div>
-        </div>
-      )}
+            <div className="container-page flex items-center justify-between gap-3 border-t border-slate-100 py-4">
+              <LocaleSwitcher current={locale} hrefFor={localeHref} label={t.nav.languageLabel} />
+              <Link
+                href={`/${locale}/login`}
+                className="rounded-lg bg-brand-700 px-4 py-2.5 text-sm font-semibold text-white"
+              >
+                {t.nav.login}
+              </Link>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </header>
   );
 }
