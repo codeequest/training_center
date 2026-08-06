@@ -4,7 +4,7 @@ import { AnimatePresence, motion, useAnimationControls } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { useState, type FormEvent } from 'react';
 
-import { CheckCircleIcon, SpinnerIcon } from '@/components/icons';
+import { CheckCircleIcon, EyeIcon, EyeOffIcon, SpinnerIcon } from '@/components/icons';
 import { ApiRequestError, apiFetch } from '@/lib/api';
 import type { Locale } from '@/i18n/config';
 import type { Dictionary } from '@/i18n/dictionaries';
@@ -29,6 +29,7 @@ export default function LoginForm({ locale, t }: { locale: Locale; t: Dictionary
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const shakeControls = useAnimationControls();
 
@@ -160,20 +161,30 @@ export default function LoginForm({ locale, t }: { locale: Locale; t: Dictionary
             {t.login.forgot}
           </a>
         </div>
-        <input
-          id="password"
-          name="password"
-          type="password"
-          autoComplete="current-password"
-          aria-invalid={Boolean(fieldErrors.password)}
-          value={password}
-          onChange={(event) => {
-            setPassword(event.target.value);
-            if (fieldErrors.password) setFieldErrors((prev) => ({ ...prev, password: undefined }));
-          }}
-          placeholder={t.login.passwordPlaceholder}
-          className={`field-input ${fieldErrors.password ? 'field-input-error' : ''}`}
-        />
+        <div className="relative">
+          <input
+            id="password"
+            name="password"
+            type={showPassword ? 'text' : 'password'}
+            autoComplete="current-password"
+            aria-invalid={Boolean(fieldErrors.password)}
+            value={password}
+            onChange={(event) => {
+              setPassword(event.target.value);
+              if (fieldErrors.password) setFieldErrors((prev) => ({ ...prev, password: undefined }));
+            }}
+            placeholder={t.login.passwordPlaceholder}
+            className={`field-input pr-11 ${fieldErrors.password ? 'field-input-error' : ''}`}
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword((prev) => !prev)}
+            aria-label={showPassword ? t.login.hidePassword : t.login.showPassword}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-muted transition-colors hover:text-ink"
+          >
+            {showPassword ? <EyeOffIcon className="h-5 w-5" /> : <EyeIcon className="h-5 w-5" />}
+          </button>
+        </div>
         <AnimatePresence>
           {fieldErrors.password && (
             <motion.p

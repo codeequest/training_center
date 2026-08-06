@@ -10,6 +10,7 @@ import * as contact from '../controllers/contact.controller';
 import * as materials from '../controllers/materials.controller';
 import * as users from '../controllers/users.controller';
 import * as misc from '../controllers/misc.controller';
+import * as emails from '../controllers/emails.controller';
 
 import { requireAuth, requireRole } from '../middleware/auth';
 import { validate } from '../middleware/validate';
@@ -120,6 +121,8 @@ admin.delete('/users/:id', users.deleteUser);
 admin.get('/contact-messages', contact.listContactMessages);
 admin.patch('/contact-messages/:id', contact.markContactRead);
 admin.delete('/contact-messages/:id', contact.deleteContactMessage);
+
+admin.post('/emails/send', validate(emails.sendEmailSchema), emails.sendBulkEmail);
 
 router.use('/admin', admin);
 

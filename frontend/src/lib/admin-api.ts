@@ -313,3 +313,16 @@ export function markContactRead(id: string, isRead: boolean): Promise<{ message:
 export function deleteContactMessage(id: string): Promise<{ message: string }> {
   return authFetch(`/admin/contact-messages/${id}`, { method: 'DELETE' });
 }
+
+// --- Emails ---
+
+export interface SendEmailInput {
+  subject: string;
+  body: string;
+  role?: 'STUDENT' | 'TEACHER' | 'ALL';
+  userIds?: string[];
+}
+
+export function sendBulkEmail(data: SendEmailInput): Promise<{ message: string; sentCount: number }> {
+  return authFetch('/admin/emails/send', { method: 'POST', body: JSON.stringify(data) });
+}

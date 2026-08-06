@@ -10,6 +10,7 @@ import {
   DocumentIcon,
   GridIcon,
   MailIcon,
+  SendIcon,
   SpinnerIcon,
   UsersIcon,
 } from '@/components/icons';
@@ -97,6 +98,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
     { href: `/${locale}/admin/sessions`, label: t.admin.nav.sessions, icon: CalendarIcon, exact: false, badge: 0 },
     { href: `/${locale}/admin/utilisateurs`, label: t.admin.nav.users, icon: UsersIcon, exact: false, badge: 0 },
     { href: `/${locale}/admin/messages`, label: t.admin.nav.messages, icon: MailIcon, exact: false, badge: badges.unreadMessages },
+    { href: `/${locale}/admin/emails`, label: t.admin.nav.emails, icon: SendIcon, exact: false, badge: 0 },
   ];
 
   const isActive = (href: string, exact: boolean) => (exact ? pathname === href : pathname.startsWith(href));
