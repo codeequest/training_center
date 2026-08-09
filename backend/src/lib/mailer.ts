@@ -9,7 +9,28 @@ if (env.smtp.host) {
     port: env.smtp.port,
     secure: env.smtp.secure,
     auth: env.smtp.user ? { user: env.smtp.user, pass: env.smtp.password } : undefined,
+    // Un envoi groupé réutilise la même connexion au lieu d'en ouvrir une par destinataire.
+    pool: true,
+    maxConnections: 3,
+    maxMessages: 50,
   });
+}
+
+/** `true` si un vrai serveur SMTP est configuré (sinon les emails sont seulement journalisés). */
+export const isMailEnabled = Boolean(transporter);
+
+/**
+ * Vérifie la connexion et l'authentification SMTP. Appelé au démarrage pour que
+ * des identifiants invalides se voient tout de suite, et non au premier envoi.
+ */
+export async function verifyMailer(): Promise<{ ok: boolean; error?: string }> {
+  if (!transporter) return { ok: false, error: 'SMTP_HOST non renseigné — emails simulés.' };
+  try {
+    await transporter.verify();
+    return { ok: true };
+  } catch (error) {
+    return { ok: false, error: error instanceof Error ? error.message : String(error) };
+  }
 }
 
 export interface MailInput {
@@ -23,17 +44,30 @@ export interface MailInput {
  * Envoie un email transactionnel. Sans SMTP configuré, le message est journalisé
  * plutôt qu'envoyé : le développement local reste fonctionnel hors ligne.
  * N'échoue jamais bruyamment — un email perdu ne doit pas casser une inscription.
+ * Renvoie `true` si le serveur SMTP a accepté le message, afin que les appelants
+ * qui rendent compte à l'utilisateur (envoi groupé) puissent annoncer un vrai total.
  */
-export async function sendMail({ to, subject, html, replyTo }: MailInput): Promise<void> {
+export async function sendMail({ to, subject, html, replyTo }: MailInput): Promise<boolean> {
   if (!transporter) {
     console.info(`[mail:simulé] à=${to} sujet="${subject}"`);
-    return;
+    return false;
   }
 
   try {
-    await transporter.sendMail({ from: env.mailFrom, to, subject, html, replyTo });
+    await transporter.sendMail({
+      from: env.mailFrom,
+      // L'enveloppe force l'expéditeur réel : Gmail refuse un `From` qui n'est pas
+      // le compte authentifié, on reste donc toujours sur SMTP_USER.
+      envelope: { from: env.smtp.user || env.mailFrom, to },
+      to,
+      subject,
+      html,
+      replyTo,
+    });
+    return true;
   } catch (error) {
     console.error(`[mail:échec] à=${to} sujet="${subject}"`, error);
+    return false;
   }
 }
 

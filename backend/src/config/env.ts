@@ -44,7 +44,11 @@ export const env = {
     user: process.env.SMTP_USER ?? '',
     password: process.env.SMTP_PASSWORD ?? '',
   },
-  mailFrom: process.env.MAIL_FROM ?? 'Centre de Formation <no-reply@centre-formation.tn>',
+  /**
+   * Adresse expéditrice. Gmail réécrit de toute façon l'en-tête `From` avec le compte
+   * authentifié : garder MAIL_FROM aligné sur SMTP_USER évite un expéditeur incohérent.
+   */
+  mailFrom: process.env.MAIL_FROM ?? 'Centre de Formation <codeequest@gmail.com>',
   contactInbox: process.env.CONTACT_INBOX ?? 'contact@centre-formation.tn',
 
   adminEmail: process.env.ADMIN_EMAIL ?? 'admin@centre-formation.tn',

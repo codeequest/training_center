@@ -13,6 +13,7 @@
     "prisma:deploy": "prisma migrate deploy",
     "prisma:studio": "prisma studio",
     "seed": "tsx prisma/seed.ts",
+    "smtp:check": "tsx scripts/check-smtp.ts",
     "typecheck": "tsc --noEmit"
   },
   "prisma": {

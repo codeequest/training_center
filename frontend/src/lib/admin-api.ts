@@ -323,6 +323,14 @@ export interface SendEmailInput {
   userIds?: string[];
 }
 
-export function sendBulkEmail(data: SendEmailInput): Promise<{ message: string; sentCount: number }> {
+export interface SendEmailResult {
+  message: string;
+  sentCount: number;
+  failedCount: number;
+  /** `true` quand aucun SMTP n'est configuré : les emails ont été journalisés, pas envoyés. */
+  simulated: boolean;
+}
+
+export function sendBulkEmail(data: SendEmailInput): Promise<SendEmailResult> {
   return authFetch('/admin/emails/send', { method: 'POST', body: JSON.stringify(data) });
 }

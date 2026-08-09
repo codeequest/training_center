@@ -3,7 +3,7 @@
 import { useParams } from 'next/navigation';
 import { useEffect, useState, type FormEvent } from 'react';
 
-import { CheckCircleIcon, SearchIcon, SendIcon, SpinnerIcon } from '@/components/icons';
+import { AlertIcon, CheckCircleIcon, SearchIcon, SendIcon, SpinnerIcon } from '@/components/icons';
 import { MotionDiv } from '@/components/motion-primitives';
 import { isLocale, type Locale } from '@/i18n/config';
 import { getDictionary } from '@/i18n/dictionaries';
@@ -29,7 +29,7 @@ export default function AdminEmailsPage() {
   const [fieldErrors, setFieldErrors] = useState<{ subject?: string; body?: string; recipients?: string }>({});
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [success, setSuccess] = useState<{ sentCount: number } | null>(null);
+  const [result, setResult] = useState<{ message: string; ok: boolean } | null>(null);
 
   useEffect(() => {
     if (mode === 'individual' && users === null) {
@@ -61,7 +61,7 @@ export default function AdminEmailsPage() {
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(null);
-    setSuccess(null);
+    setResult(null);
 
     const nextErrors: typeof fieldErrors = {};
     if (subject.trim().length < 3) nextErrors.subject = t.admin.emails.subjectRequired;
@@ -72,15 +72,19 @@ export default function AdminEmailsPage() {
 
     setIsSubmitting(true);
     try {
-      const { sentCount } = await sendBulkEmail({
+      const { message, simulated, failedCount } = await sendBulkEmail({
         subject: subject.trim(),
         body: body.trim(),
         ...(mode === 'group' ? { role: group } : { userIds: Array.from(selectedIds) }),
       });
-      setSuccess({ sentCount });
-      setSubject('');
-      setBody('');
-      setSelectedIds(new Set());
+      const ok = !simulated && failedCount === 0;
+      setResult({ message, ok });
+      // Sur échec, on conserve la saisie pour que l'administrateur puisse réessayer.
+      if (ok) {
+        setSubject('');
+        setBody('');
+        setSelectedIds(new Set());
+      }
     } catch (caught) {
       setError(caught instanceof ApiRequestError ? caught.message : t.admin.common.networkError);
     } finally {
@@ -95,12 +99,20 @@ export default function AdminEmailsPage() {
         <p className="mt-2 text-[15px] text-ink-muted">{t.admin.emails.subtitle}</p>
       </MotionDiv>
 
-      {success && (
-        <div className="mt-6 flex items-center gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
-          <CheckCircleIcon className="h-5 w-5 shrink-0" />
-          <span>
-            {t.admin.emails.successTitle} — {success.sentCount}
-          </span>
+      {result && (
+        <div
+          className={`mt-6 flex items-center gap-3 rounded-xl border px-4 py-3 text-sm ${
+            result.ok
+              ? 'border-emerald-200 bg-emerald-50 text-emerald-800'
+              : 'border-amber-200 bg-amber-50 text-amber-800'
+          }`}
+        >
+          {result.ok ? (
+            <CheckCircleIcon className="h-5 w-5 shrink-0" />
+          ) : (
+            <AlertIcon className="h-5 w-5 shrink-0" />
+          )}
+          <span>{result.message}</span>
         </div>
       )}
       {error && <p className="mt-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">{error}</p>}

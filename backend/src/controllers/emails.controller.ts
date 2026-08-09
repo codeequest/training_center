@@ -1,7 +1,7 @@
 import { Role } from '@prisma/client';
 import { z } from 'zod';
 import { prisma } from '../lib/prisma';
-import { layout, p, sendMail } from '../lib/mailer';
+import { isMailEnabled, layout, p, sendMail } from '../lib/mailer';
 import { asyncHandler } from '../utils/asyncHandler';
 import { badRequest } from '../utils/errors';
 
@@ -42,15 +42,42 @@ export const sendBulkEmail = asyncHandler(async (req, res) => {
     .map((paragraph) => p(paragraph.replace(/\n/g, '<br/>')))
     .join('');
 
-  await Promise.all(
-    recipients.map((recipient) =>
-      sendMail({
-        to: recipient.email,
-        subject,
-        html: layout(subject, p(`Bonjour ${recipient.firstName},`) + bodyHtml),
-      })
-    )
-  );
+  // Envoi par petits lots : un fournisseur SMTP (Gmail en particulier) limite le débit
+  // et coupe la connexion si on lui pousse des centaines de messages d'un coup.
+  const BATCH_SIZE = 10;
+  let sentCount = 0;
 
-  res.json({ message: `Email envoyé à ${recipients.length} destinataire(s).`, sentCount: recipients.length });
+  for (let index = 0; index < recipients.length; index += BATCH_SIZE) {
+    const results = await Promise.all(
+      recipients.slice(index, index + BATCH_SIZE).map((recipient) =>
+        sendMail({
+          to: recipient.email,
+          subject,
+          html: layout(escapeHtml(subject), p(`Bonjour ${escapeHtml(recipient.firstName)},`) + bodyHtml),
+        })
+      )
+    );
+    sentCount += results.filter(Boolean).length;
+  }
+
+  const failedCount = recipients.length - sentCount;
+
+  if (!isMailEnabled) {
+    return res.json({
+      message: `SMTP non configuré : ${recipients.length} email(s) simulé(s), aucun envoi réel.`,
+      sentCount: 0,
+      failedCount: 0,
+      simulated: true,
+    });
+  }
+
+  res.json({
+    message:
+      failedCount === 0
+        ? `Email envoyé à ${sentCount} destinataire(s).`
+        : `Email envoyé à ${sentCount} destinataire(s), ${failedCount} échec(s).`,
+    sentCount,
+    failedCount,
+    simulated: false,
+  });
 });
