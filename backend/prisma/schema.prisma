@@ -70,6 +70,7 @@ model User {
   avatarUrl    String?
   locale       String   @default("fr")
   isActive     Boolean  @default(true)
+  notificationsSeenAt DateTime @default(now())
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 

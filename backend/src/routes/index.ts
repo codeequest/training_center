@@ -10,6 +10,7 @@ import * as contact from '../controllers/contact.controller';
 import * as materials from '../controllers/materials.controller';
 import * as users from '../controllers/users.controller';
 import * as misc from '../controllers/misc.controller';
+import * as notifications from '../controllers/notifications.controller';
 
 import { requireAuth, requireRole } from '../middleware/auth';
 import { validate } from '../middleware/validate';
@@ -64,6 +65,10 @@ router.post(
   validate(auth.changePasswordSchema),
   auth.changePassword
 );
+
+// ------------------------------------------------------ Notifications
+router.get('/me/notifications', requireAuth, notifications.getMyNotifications);
+router.post('/me/notifications/seen', requireAuth, notifications.markNotificationsSeen);
 
 // ------------------------------------------------- Espace stagiaire
 router.get('/me/enrollments', requireRole('STUDENT', 'ADMIN'), enrollments.listMyEnrollments);
