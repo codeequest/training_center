@@ -22,6 +22,24 @@ const dictionaries = {
       closeMenu: 'Fermer le menu',
       languageLabel: 'Changer de langue',
     },
+    notifications: {
+      title: 'Notifications',
+      empty: 'Aucune notification pour le moment.',
+      loadError: 'Impossible de charger les notifications.',
+      kindLabels: {
+        contact_message: 'Nouveau message',
+        new_enrollment: 'Nouvelle inscription',
+        enrollment_status: 'Mise à jour d’inscription',
+        certificate: 'Attestation disponible',
+      },
+      statusLabels: {
+        REQUESTED: 'Demande envoyée',
+        CONFIRMED: 'Confirmée',
+        PAID: 'Réglée',
+        COMPLETED: 'Terminée',
+        CANCELLED: 'Annulée',
+      },
+    },
     hero: {
       badge: 'Sessions ouvertes — Tunis & à distance',
       title: 'Montez en compétences sur les métiers de la data et du management',
@@ -783,6 +801,24 @@ const dictionaries = {
       openMenu: 'Open menu',
       closeMenu: 'Close menu',
       languageLabel: 'Change language',
+    },
+    notifications: {
+      title: 'Notifications',
+      empty: 'No notifications yet.',
+      loadError: 'Could not load notifications.',
+      kindLabels: {
+        contact_message: 'New message',
+        new_enrollment: 'New enrolment',
+        enrollment_status: 'Enrolment update',
+        certificate: 'Certificate available',
+      },
+      statusLabels: {
+        REQUESTED: 'Request sent',
+        CONFIRMED: 'Confirmed',
+        PAID: 'Paid',
+        COMPLETED: 'Completed',
+        CANCELLED: 'Cancelled',
+      },
     },
     hero: {
       badge: 'Enrolling now — Tunis & online',

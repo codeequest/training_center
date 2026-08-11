@@ -6,6 +6,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 
 import Logo from './logo';
+import NotificationBell from './notification-bell';
 import { ApiRequestError } from '@/lib/api';
 import { clearToken, fetchCurrentUser, getToken, type CurrentUser } from '@/lib/auth-client';
 import { locales, type Locale } from '@/i18n/config';
@@ -150,6 +151,7 @@ export default function Navbar({ locale, t }: NavbarProps) {
 
         <div className="hidden items-center gap-3 md:flex">
           <LocaleSwitcher current={locale} hrefFor={localeHref} label={t.nav.languageLabel} />
+          {session.status === 'authed' && <NotificationBell locale={locale} t={t.notifications} />}
           {session.status === 'checking' ? (
             <span aria-hidden className="h-9 w-28 animate-pulse rounded-lg bg-slate-100" />
           ) : session.status === 'authed' ? (
@@ -240,7 +242,10 @@ export default function Navbar({ locale, t }: NavbarProps) {
             </ul>
 
             <div className="container-page flex items-center justify-between gap-3 border-t border-slate-100 py-4">
-              <LocaleSwitcher current={locale} hrefFor={localeHref} label={t.nav.languageLabel} />
+              <div className="flex items-center gap-2">
+                <LocaleSwitcher current={locale} hrefFor={localeHref} label={t.nav.languageLabel} />
+                {session.status === 'authed' && <NotificationBell locale={locale} t={t.notifications} />}
+              </div>
               {session.status === 'checking' ? (
                 <span aria-hidden className="h-10 w-28 animate-pulse rounded-lg bg-slate-100" />
               ) : session.status === 'authed' ? (
