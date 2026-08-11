@@ -78,8 +78,44 @@ model User {
   enrollments      Enrollment[]
   taughtSessions   Session[]        @relation("SessionTeacher")
   uploadedMaterials Material[]      @relation("MaterialUploader")
+  refreshTokens    RefreshToken[]
+  deviceTokens     DeviceToken[]
 
   @@index([role])
+}
+
+/// Jeton de rafraîchissement opaque, propre à un appareil.
+/// Seul le hachage est stocké : une fuite de la base ne donne aucun jeton utilisable.
+/// La rotation crée une chaîne (`replacedById`) qui permet de détecter un rejeu.
+model RefreshToken {
+  id           String    @id @default(cuid())
+  tokenHash    String    @unique
+  userId       String
+  expiresAt    DateTime
+  revokedAt    DateTime?
+  replacedById String?
+  device       String?
+  createdAt    DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+/// Jeton de notification push Expo, un par appareil.
+/// Unique sur le jeton : un appareil qui change de compte est réaffecté, pas dupliqué.
+model DeviceToken {
+  id         String   @id @default(cuid())
+  token      String   @unique
+  userId     String
+  platform   String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 model TeacherProfile {

@@ -27,7 +27,14 @@ export const env = {
   databaseUrl: required('DATABASE_URL', 'postgresql://postgres:postgres@localhost:5432/centre_formation?schema=public'),
 
   jwtSecret,
-  jwtExpiresIn: process.env.JWT_EXPIRES_IN ?? '7d',
+  /**
+   * Durée du jeton d'accès. Court par défaut : les clients le renouvellent via
+   * `/auth/refresh`, ce qui rend une fuite de jeton exploitable quelques minutes
+   * seulement. `JWT_EXPIRES_IN` reste accepté pour ne pas casser les .env existants.
+   */
+  jwtExpiresIn: process.env.JWT_EXPIRES_IN ?? '15m',
+  /** Durée du jeton de rafraîchissement, en jours. Révocable côté serveur. */
+  refreshTokenDays: Number(process.env.REFRESH_TOKEN_DAYS ?? 30),
 
   corsOrigin: (process.env.CORS_ORIGIN ?? 'http://localhost:3000')
     .split(',')

@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { prisma } from '../lib/prisma';
 import { streamCertificate } from '../lib/certificate';
 import { layout, p, sendMail } from '../lib/mailer';
+import { sendPushToUser } from '../lib/push';
 import { env } from '../config/env';
 import { asyncHandler } from '../utils/asyncHandler';
 import { badRequest, conflict, forbidden, notFound } from '../utils/errors';
@@ -107,6 +108,16 @@ export const requestEnrollment = asyncHandler(async (req, res) => {
     ),
   });
 
+  // Le formateur de la session est prévenu sur mobile : c'est exactement le signal que
+  // la cloche `new_enrollment` lui affiche déjà côté web.
+  if (session.teacherId) {
+    await sendPushToUser(session.teacherId, {
+      title: 'Nouvelle inscription',
+      body: `${rest.requesterName} — ${courseTitle}`,
+      data: { href: `/teacher/sessions/${session.id}` },
+    });
+  }
+
   res.status(201).json({
     message: 'Votre demande a bien été enregistrée. Nous vous recontactons sous 48 heures.',
     enrollmentId: enrollment.id,
@@ -208,6 +219,17 @@ export const updateEnrollment = asyncHandler(async (req, res) => {
           p('Vos identifiants d\'accès à l\'espace stagiaire vous seront transmis séparément.')
       ),
     });
+
+    // Push mobile en complément de l'email, si l'inscription est rattachée à un compte.
+    // `sendPushToUser` ne lève jamais : une panne du service push ne doit pas faire
+    // échouer la mise à jour de l'inscription, déjà écrite en base.
+    if (enrollment.studentId) {
+      await sendPushToUser(enrollment.studentId, {
+        title: 'Inscription confirmée',
+        body: `Votre place est confirmée pour ${enrollment.session.course.titleFr}.`,
+        data: { href: '/student/formations' },
+      });
+    }
   }
 
   res.json({ enrollment });
@@ -239,6 +261,14 @@ export const issueCertificate = asyncHandler(async (req, res) => {
   const certificate = await prisma.certificate.create({
     data: { enrollmentId: enrollment.id, serialNumber },
   });
+
+  if (enrollment.studentId) {
+    await sendPushToUser(enrollment.studentId, {
+      title: 'Attestation disponible',
+      body: `Votre attestation pour ${enrollment.session.course.titleFr} est disponible.`,
+      data: { href: '/student/formations' },
+    });
+  }
 
   res.status(201).json({ certificate });
 });

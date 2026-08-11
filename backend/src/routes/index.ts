@@ -12,6 +12,7 @@ import * as users from '../controllers/users.controller';
 import * as misc from '../controllers/misc.controller';
 import * as emails from '../controllers/emails.controller';
 import * as notifications from '../controllers/notifications.controller';
+import * as devices from '../controllers/devices.controller';
 
 import { requireAuth, requireRole } from '../middleware/auth';
 import { validate } from '../middleware/validate';
@@ -58,6 +59,13 @@ router.post('/contact', publicFormLimiter, validate(contact.contactSchema), cont
 
 // ------------------------------------------------------ Authentification
 router.post('/auth/login', loginLimiter, validate(auth.loginSchema), auth.login);
+// `/auth/refresh` et `/auth/logout` ne portent volontairement pas `requireAuth` : le
+// jeton d'accès est expiré au moment de l'appel, c'est le jeton de rafraîchissement —
+// opaque, haché en base et révocable — qui authentifie la demande. Il ne donne accès à
+// aucune donnée privée, seulement à une nouvelle paire de jetons. Débit limité car
+// l'endpoint accepte un secret présenté par le client.
+router.post('/auth/refresh', loginLimiter, validate(auth.refreshSchema), auth.refresh);
+router.post('/auth/logout', validate(auth.refreshSchema), auth.logout);
 router.get('/auth/me', requireAuth, auth.me);
 router.patch('/auth/me', requireAuth, validate(auth.updateProfileSchema), auth.updateProfile);
 router.post(
@@ -70,6 +78,16 @@ router.post(
 // ------------------------------------------------------ Notifications
 router.get('/me/notifications', requireAuth, notifications.getMyNotifications);
 router.post('/me/notifications/seen', requireAuth, notifications.markNotificationsSeen);
+
+// Appareils mobiles pour le push : ressource propre à l'utilisateur, la propriété est
+// revérifiée dans le contrôleur (le jeton seul ne doit pas suffire à agir).
+router.post(
+  '/me/push-token',
+  requireAuth,
+  validate(devices.pushTokenSchema),
+  devices.registerPushToken
+);
+router.delete('/me/push-token/:token', requireAuth, devices.deletePushToken);
 
 // ------------------------------------------------- Espace stagiaire
 router.get('/me/enrollments', requireRole('STUDENT', 'ADMIN'), enrollments.listMyEnrollments);

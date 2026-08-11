@@ -1,13 +1,22 @@
 import bcrypt from 'bcryptjs';
 import { z } from 'zod';
 import { prisma } from '../lib/prisma';
-import { signToken } from '../middleware/auth';
+import {
+  issueTokenPair,
+  revokeAllUserTokens,
+  revokeRefreshToken,
+  rotateRefreshToken,
+} from '../lib/tokens';
 import { asyncHandler } from '../utils/asyncHandler';
 import { badRequest, notFound, unauthorized } from '../utils/errors';
 
 export const loginSchema = z.object({
   email: z.string().email('Adresse email invalide.'),
   password: z.string().min(1, 'Mot de passe requis.'),
+});
+
+export const refreshSchema = z.object({
+  refreshToken: z.string().min(1, 'Jeton de rafraîchissement requis.'),
 });
 
 export const updateProfileSchema = z.object({
@@ -53,10 +62,13 @@ export const login = asyncHandler(async (req, res) => {
   if (!user.isActive) throw unauthorized('Ce compte est désactivé. Contactez le centre.');
   if (!(await bcrypt.compare(password, user.passwordHash))) throw invalid;
 
-  const token = signToken({ sub: user.id, role: user.role, email: user.email });
+  // `token` et `user` sont conservés tels quels : le client web existant lit ces deux
+  // champs. `refreshToken` et `expiresIn` s'y ajoutent pour les clients qui savent
+  // renouveler leur session (mobile, et le web une fois migré).
+  const pair = await issueTokenPair(user, req.headers['user-agent'] ?? null);
 
   res.json({
-    token,
+    ...pair,
     user: {
       id: user.id,
       email: user.email,
@@ -69,6 +81,22 @@ export const login = asyncHandler(async (req, res) => {
       createdAt: user.createdAt,
     },
   });
+});
+
+/**
+ * Renouvelle la paire de jetons. Volontairement non authentifié : le jeton d'accès est
+ * justement expiré au moment de l'appel. Le jeton de rafraîchissement fait foi.
+ */
+export const refresh = asyncHandler(async (req, res) => {
+  const { refreshToken } = req.body as z.infer<typeof refreshSchema>;
+  res.json(await rotateRefreshToken(refreshToken));
+});
+
+/** Déconnexion d'un appareil : le jeton de rafraîchissement est révoqué côté serveur. */
+export const logout = asyncHandler(async (req, res) => {
+  const { refreshToken } = req.body as z.infer<typeof refreshSchema>;
+  await revokeRefreshToken(refreshToken);
+  res.json({ message: 'Déconnecté.' });
 });
 
 export const me = asyncHandler(async (req, res) => {
@@ -107,6 +135,10 @@ export const changePassword = asyncHandler(async (req, res) => {
     where: { id: user.id },
     data: { passwordHash: await bcrypt.hash(newPassword, 12) },
   });
+
+  // Un changement de mot de passe doit fermer les sessions ouvertes ailleurs : sans cela
+  // un jeton de rafraîchissement volé survivrait au changement pendant 30 jours.
+  await revokeAllUserTokens(user.id);
 
   res.json({ message: 'Mot de passe mis à jour.' });
 });
