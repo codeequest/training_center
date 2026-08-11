@@ -185,6 +185,9 @@ const dictionaries = {
       passwordRequired: 'Merci de renseigner votre mot de passe.',
       showPassword: 'Afficher le mot de passe',
       hidePassword: 'Masquer le mot de passe',
+      // Libellés courts : le mobile affiche du texte là où le web utilise une icône œil.
+      show: 'Afficher',
+      hide: 'Masquer',
       successTitle: 'Connexion réussie',
       successBody: 'Redirection vers votre espace…',
     },
@@ -963,6 +966,8 @@ const dictionaries = {
       passwordRequired: 'Please enter your password.',
       showPassword: 'Show password',
       hidePassword: 'Hide password',
+      show: 'Show',
+      hide: 'Hide',
       successTitle: 'Signed in',
       successBody: 'Redirecting to your account…',
     },

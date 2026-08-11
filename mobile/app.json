@@ -1,0 +1,41 @@
+{
+  "expo": {
+    "name": "Centre de Formation",
+    "slug": "centre-formation",
+    "scheme": "centreformation",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "tn.centreformation.app"
+    },
+    "android": {
+      "package": "tn.centreformation.app",
+      "adaptiveIcon": {
+        "backgroundColor": "#0f766e",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      "expo-notifications"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "//": "apiUrl est écrasable par EXPO_PUBLIC_API_URL. Sur un téléphone réel, 'localhost' désigne le téléphone lui-même : il faut l'IP du poste de développement.",
+      "apiUrl": "http://192.168.1.13:4000/api"
+    }
+  }
+}
