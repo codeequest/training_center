@@ -36,6 +36,10 @@ interface TrackTheme {
   text: string;
   /** Badge discret (fond clair + texte coloré). */
   badge: string;
+  /** Carte de session sélectionnée dans le formulaire d'inscription. */
+  radioSelected: string;
+  /** Pastille pleine du bouton radio sélectionné. */
+  radioDot: string;
 }
 
 // Toutes les classes ci-dessous sont écrites littéralement (pas de concaténation
@@ -48,6 +52,8 @@ export const trackThemes: Record<TrackKey, TrackTheme> = {
     gradient: 'from-powerbi-500 to-powerbi-700',
     text: 'text-powerbi-700',
     badge: 'bg-powerbi-50 text-powerbi-800',
+    radioSelected: 'border-powerbi-500 ring-2 ring-powerbi-200 bg-powerbi-50',
+    radioDot: 'bg-powerbi-600',
   },
   genai: {
     chip: 'bg-gradient-to-br from-genai-400 to-genai-600 text-white',
@@ -55,6 +61,8 @@ export const trackThemes: Record<TrackKey, TrackTheme> = {
     gradient: 'from-genai-500 to-genai-700',
     text: 'text-genai-700',
     badge: 'bg-genai-50 text-genai-700',
+    radioSelected: 'border-genai-500 ring-2 ring-genai-200 bg-genai-50',
+    radioDot: 'bg-genai-600',
   },
   pmp: {
     chip: 'bg-gradient-to-br from-pmp-400 to-pmp-600 text-white',
@@ -62,6 +70,8 @@ export const trackThemes: Record<TrackKey, TrackTheme> = {
     gradient: 'from-pmp-500 to-pmp-700',
     text: 'text-pmp-700',
     badge: 'bg-pmp-50 text-pmp-700',
+    radioSelected: 'border-pmp-500 ring-2 ring-pmp-200 bg-pmp-50',
+    radioDot: 'bg-pmp-600',
   },
   scrum: {
     chip: 'bg-gradient-to-br from-scrum-400 to-scrum-600 text-white',
@@ -69,6 +79,8 @@ export const trackThemes: Record<TrackKey, TrackTheme> = {
     gradient: 'from-scrum-500 to-scrum-700',
     text: 'text-scrum-700',
     badge: 'bg-scrum-50 text-scrum-700',
+    radioSelected: 'border-scrum-500 ring-2 ring-scrum-200 bg-scrum-50',
+    radioDot: 'bg-scrum-600',
   },
 };
 

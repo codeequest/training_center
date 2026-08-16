@@ -13,6 +13,7 @@ export const MotionDiv = motion.div;
 export const MotionSection = motion.section;
 export const MotionUl = motion.ul;
 export const MotionLi = motion.li;
+export const MotionDl = motion.dl;
 
 export const fadeUpItem: Variants = {
   hidden: { opacity: 0, y: 20 },

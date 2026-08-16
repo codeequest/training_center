@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
+import EnrollmentForm from './enrollment-form';
 import { ArrowIcon, CheckIcon, CourseIcon } from '@/components/icons';
 import { MotionDiv, MotionLi, MotionUl, fadeUpItem, revealParentProps, revealProps } from '@/components/motion-primitives';
 import { courses as staticCourses, levelLabels } from '@/content/courses';
@@ -246,16 +247,26 @@ export default async function CourseDetailPage({
           </section>
         )}
 
-        <MotionDiv
-          {...revealProps}
-          className={`mt-14 flex flex-col items-center gap-4 rounded-2xl bg-gradient-to-br p-8 text-center text-white sm:flex-row sm:justify-between sm:text-left ${theme.gradient}`}
-        >
-          <p className="text-[15px] leading-relaxed">{t.courseDetail.enrollNote}</p>
-          <Link href={`/${locale}/contact`} className="btn shrink-0 bg-white text-ink hover:bg-slate-50">
-            {t.courseDetail.enrollCta}
-            <ArrowIcon />
-          </Link>
-        </MotionDiv>
+        {/*
+          Sans session ouverte il n'y a rien à demander : on retombe sur le
+          formulaire de contact, seul cas où il reste le bon outil.
+        */}
+        {course.sessions.length > 0 ? (
+          <MotionDiv {...revealProps} className="mt-14">
+            <EnrollmentForm slug={course.slug} sessions={course.sessions} locale={locale} t={t} />
+          </MotionDiv>
+        ) : (
+          <MotionDiv
+            {...revealProps}
+            className={`mt-14 flex flex-col items-center gap-4 rounded-2xl bg-gradient-to-br p-8 text-center text-white sm:flex-row sm:justify-between sm:text-left ${theme.gradient}`}
+          >
+            <p className="text-[15px] leading-relaxed">{t.courseDetail.enrollNote}</p>
+            <Link href={`/${locale}/contact`} className="btn shrink-0 bg-white text-ink hover:bg-slate-50">
+              {t.courseDetail.enrollCta}
+              <ArrowIcon />
+            </Link>
+          </MotionDiv>
+        )}
       </div>
     </div>
   );

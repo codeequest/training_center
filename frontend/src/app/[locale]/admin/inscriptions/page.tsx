@@ -42,6 +42,7 @@ export default function AdminEnrollmentsPage() {
   const [error, setError] = useState<string | null>(null);
   const [pendingIds, setPendingIds] = useState<Set<string>>(new Set());
   const [deleteTarget, setDeleteTarget] = useState<AdminEnrollment | null>(null);
+  const [cancelTarget, setCancelTarget] = useState<AdminEnrollment | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
   function load() {
@@ -182,11 +183,30 @@ export default function AdminEnrollmentsPage() {
               onStatusChange={(status) => handleStatusChange(enrollment, status)}
               onIssueCertificate={() => handleIssueCertificate(enrollment)}
               onSaveNotes={(notes) => handleNotesSave(enrollment, notes)}
+              onCancelRequest={() => setCancelTarget(enrollment)}
               onDelete={() => setDeleteTarget(enrollment)}
             />
           ))}
         </MotionUl>
       )}
+
+      {/*
+        L'annulation retire sa place au stagiaire : elle passe par la même
+        confirmation que la suppression, dont elle est l'équivalent côté
+        utilisateur final.
+      */}
+      <ConfirmDialog
+        open={Boolean(cancelTarget)}
+        onClose={() => setCancelTarget(null)}
+        onConfirm={async () => {
+          if (cancelTarget) await handleStatusChange(cancelTarget, 'CANCELLED');
+          setCancelTarget(null);
+        }}
+        title={t.admin.enrollments.cancelConfirmTitle}
+        body={t.admin.enrollments.cancelConfirmBody}
+        confirmLabel={t.admin.enrollments.cancelConfirmLabel}
+        cancelLabel={t.admin.common.confirmCancelLabel}
+      />
 
       <ConfirmDialog
         open={Boolean(deleteTarget)}
@@ -213,6 +233,7 @@ function EnrollmentCard({
   onStatusChange,
   onIssueCertificate,
   onSaveNotes,
+  onCancelRequest,
   onDelete,
 }: {
   enrollment: AdminEnrollment;
@@ -222,6 +243,7 @@ function EnrollmentCard({
   onStatusChange: (status: EnrollmentStatus) => void;
   onIssueCertificate: () => void;
   onSaveNotes: (notes: string) => void;
+  onCancelRequest: () => void;
   onDelete: () => void;
 }) {
   const [notes, setNotes] = useState(enrollment.adminNotes ?? '');
@@ -249,7 +271,10 @@ function EnrollmentCard({
           <h2 className="text-[16px] font-semibold text-ink">{enrollment.requesterName}</h2>
           <p className="text-sm text-ink-muted">{enrollment.requesterEmail}</p>
         </div>
-        <span className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold ${theme.badge}`}>
+        <span
+          className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold ${theme.badge}`}
+        >
+          <theme.icon className="h-3 w-3" />
           {t.admin.enrollments.statusLabels[enrollment.status]}
         </span>
       </div>
@@ -326,7 +351,7 @@ function EnrollmentCard({
         {enrollment.status !== 'CANCELLED' && enrollment.status !== 'COMPLETED' && (
           <button
             type="button"
-            onClick={() => onStatusChange('CANCELLED')}
+            onClick={onCancelRequest}
             disabled={isPending}
             className="btn-secondary text-sm"
           >

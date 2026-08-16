@@ -43,17 +43,21 @@ export default function AdminDashboardPage() {
     };
   }, []);
 
-  const tiles = stats
-    ? [
-        { label: t.admin.dashboard.statStudents, value: stats.totalStudents },
-        { label: t.admin.dashboard.statTeachers, value: stats.totalTeachers },
-        { label: t.admin.dashboard.statCourses, value: stats.publishedCourses },
-        { label: t.admin.dashboard.statOpenSessions, value: stats.openSessions },
-        { label: t.admin.dashboard.statPending, value: stats.pendingRequests },
-        { label: t.admin.dashboard.statConfirmed, value: stats.confirmedEnrollments },
-        { label: t.admin.dashboard.statUnreadMessages, value: stats.unreadMessages },
-      ]
-    : [];
+  /*
+    Le tableau garde toujours ses 7 entrées, même avant l'arrivée des données :
+    le conteneur `revealParentProps` se révèle une seule fois (`viewport.once`),
+    donc des enfants montés après coup resteraient figés sur la variante
+    `hidden` — invisibles. Seule la valeur est différée.
+  */
+  const tiles = [
+    { label: t.admin.dashboard.statStudents, value: stats?.totalStudents },
+    { label: t.admin.dashboard.statTeachers, value: stats?.totalTeachers },
+    { label: t.admin.dashboard.statCourses, value: stats?.publishedCourses },
+    { label: t.admin.dashboard.statOpenSessions, value: stats?.openSessions },
+    { label: t.admin.dashboard.statPending, value: stats?.pendingRequests },
+    { label: t.admin.dashboard.statConfirmed, value: stats?.confirmedEnrollments },
+    { label: t.admin.dashboard.statUnreadMessages, value: stats?.unreadMessages },
+  ];
 
   const countByStatus = Object.fromEntries(breakdown.map((row) => [row.status, row.count])) as Record<string, number>;
   const maxCount = Math.max(1, ...breakdown.map((row) => row.count));
@@ -73,7 +77,7 @@ export default function AdminDashboardPage() {
             className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
           >
             <p className="text-3xl font-bold tracking-tight text-genai-700">
-              {stats ? <AnimatedStat value={String(tile.value)} locale={locale} /> : '—'}
+              {tile.value === undefined ? '—' : <AnimatedStat value={String(tile.value)} locale={locale} />}
             </p>
             <p className="mt-1.5 text-sm text-ink-muted">{tile.label}</p>
           </MotionLi>
@@ -148,7 +152,10 @@ export default function AdminDashboardPage() {
                         {title} · {formatDate(enrollment.createdAt, locale)}
                       </p>
                     </div>
-                    <span className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold ${theme.badge}`}>
+                    <span
+                      className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold ${theme.badge}`}
+                    >
+                      <theme.icon className="h-3 w-3" />
                       {t.admin.enrollments.statusLabels[enrollment.status]}
                     </span>
                   </li>
