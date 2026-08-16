@@ -258,25 +258,31 @@ export default function Navbar({ locale, t }: NavbarProps) {
               ))}
             </ul>
 
-            <div className="container-page flex items-center justify-between gap-3 border-t border-slate-100 py-4">
+            {/*
+              Sur les petits écrans, langue + compte + déconnexion sur une même
+              ligne forcent le retour à la ligne au milieu des libellés. Les deux
+              groupes sont donc empilés, et les actions occupent toute la largeur
+              — cibles tactiles plus confortables au passage.
+            */}
+            <div className="container-page flex flex-col gap-4 border-t border-slate-100 py-4">
               <div className="flex items-center gap-2">
                 <LocaleSwitcher current={locale} hrefFor={localeHref} label={t.nav.languageLabel} />
                 {session.status === 'authed' && <NotificationBell locale={locale} t={t.notifications} />}
               </div>
               {session.status === 'checking' ? (
-                <span aria-hidden className="h-10 w-28 animate-pulse rounded-lg bg-slate-100" />
+                <span aria-hidden className="h-11 w-full animate-pulse rounded-lg bg-slate-100" />
               ) : session.status === 'authed' ? (
                 <div className="flex items-center gap-2">
                   <Link
                     href={accountHref(locale, session.user.role)}
-                    className="rounded-lg bg-brand-700 px-4 py-2.5 text-sm font-semibold text-white"
+                    className="flex-1 whitespace-nowrap rounded-lg bg-brand-700 px-4 py-3 text-center text-sm font-semibold text-white"
                   >
                     {t.nav.myAccount}
                   </Link>
                   <button
                     type="button"
                     onClick={logout}
-                    className="rounded-lg px-3 py-2.5 text-sm font-medium text-ink-muted"
+                    className="whitespace-nowrap rounded-lg border border-slate-300 px-4 py-3 text-sm font-medium text-ink-muted"
                   >
                     {t.nav.logout}
                   </button>
@@ -284,7 +290,7 @@ export default function Navbar({ locale, t }: NavbarProps) {
               ) : (
                 <Link
                   href={`/${locale}/login`}
-                  className="rounded-lg bg-brand-700 px-4 py-2.5 text-sm font-semibold text-white"
+                  className="block whitespace-nowrap rounded-lg bg-brand-700 px-4 py-3 text-center text-sm font-semibold text-white"
                 >
                   {t.nav.login}
                 </Link>

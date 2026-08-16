@@ -361,7 +361,7 @@ function EnrollmentCard({
         <button
           type="button"
           onClick={onDelete}
-          className="ml-auto rounded-lg p-2 text-ink-muted transition-colors hover:bg-red-50 hover:text-red-600"
+          className="btn-icon ml-auto hover:bg-red-50 hover:text-red-600"
           aria-label={t.admin.common.delete}
         >
           <TrashIcon />

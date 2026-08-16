@@ -41,6 +41,16 @@
            hover:shadow-lg hover:brightness-110;
   }
 
+  /*
+    Bouton à icône seule. La cible fait 44 px de côté (recommandation tactile
+    WCAG 2.5.5) même si le glyphe n'en occupe que 16 : `p-2` donnait 32 px,
+    difficile à viser au pouce.
+  */
+  .btn-icon {
+    @apply grid h-11 w-11 shrink-0 place-items-center rounded-lg text-ink-muted
+           transition-colors disabled:cursor-not-allowed disabled:opacity-60;
+  }
+
   .btn-secondary {
     @apply btn border border-slate-300 bg-white text-ink hover:border-brand-600 hover:text-brand-700;
   }

@@ -150,7 +150,45 @@ function RosterPanel({ enrollments, t }: { enrollments: RosterEnrollment[]; t: D
       {enrollments.length === 0 ? (
         <p className="mt-4 text-sm text-ink-muted">{t.teacher.session.roster.empty}</p>
       ) : (
-        <div className="mt-4 overflow-x-auto">
+        <>
+          {/*
+            Cinq colonnes ne tiennent pas sur un téléphone : sous `sm` la liste
+            est rendue en fiches empilées plutôt qu'en tableau à faire défiler
+            latéralement. Même données, deux présentations.
+          */}
+          <ul className="mt-4 space-y-3 sm:hidden">
+            {enrollments.map((enrollment, index) => (
+              <li
+                key={enrollment.id}
+                className="animate-fade-up rounded-xl border border-slate-200 p-4"
+                style={{ animationDelay: `${140 + index * 40}ms` }}
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <p className="font-medium text-ink">
+                    {enrollment.student.firstName} {enrollment.student.lastName}
+                  </p>
+                  <span className={`badge shrink-0 ${enrollmentStatusClasses[enrollment.status]}`}>
+                    {t.teacher.enrollmentStatusLabels[enrollment.status]}
+                  </span>
+                </div>
+                <p className="mt-2 break-all text-sm text-ink-muted">{enrollment.student.email}</p>
+                <p className="mt-1 text-sm text-ink-muted">
+                  {enrollment.student.phone || t.teacher.session.roster.noPhone}
+                </p>
+                <p className="mt-3 text-sm">
+                  {enrollment.certificate ? (
+                    <span className="badge bg-emerald-50 text-emerald-700">
+                      {t.teacher.session.roster.certificateIssued} · {enrollment.certificate.serialNumber}
+                    </span>
+                  ) : (
+                    <span className="text-ink-muted">{t.teacher.session.roster.certificateNone}</span>
+                  )}
+                </p>
+              </li>
+            ))}
+          </ul>
+
+          <div className="mt-4 hidden overflow-x-auto sm:block">
           <table className="w-full min-w-[640px] border-collapse text-sm">
             <thead>
               <tr className="border-b border-slate-200 text-left text-xs font-semibold uppercase tracking-wide text-ink-muted">
@@ -193,7 +231,8 @@ function RosterPanel({ enrollments, t }: { enrollments: RosterEnrollment[]; t: D
               ))}
             </tbody>
           </table>
-        </div>
+          </div>
+        </>
       )}
     </div>
   );
