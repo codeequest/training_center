@@ -11,6 +11,7 @@ import { getDictionary } from '@/i18n/dictionaries';
 import { ApiRequestError } from '@/lib/api';
 import { downloadProtectedFile } from '@/lib/auth-client';
 import { themeForSlug } from '@/lib/course-theme';
+import { statusTheme } from '@/lib/status-theme';
 import { listMyEnrollments, type EnrollmentStatus, type StudentEnrollment } from '@/lib/student-api';
 
 const PIPELINE: EnrollmentStatus[] = ['REQUESTED', 'CONFIRMED', 'PAID', 'COMPLETED'];
@@ -113,10 +114,14 @@ export default function StudentEnrollmentsPage() {
                 <div className="flex items-start justify-between gap-3">
                   <h2 className="text-[17px] font-semibold leading-snug text-ink">{title}</h2>
                   <span
-                    className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold ${
+                    className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold ${
                       isCancelled ? 'bg-slate-100 text-slate-500' : theme.badge
                     }`}
                   >
+                    {(() => {
+                      const StatusIcon = statusTheme[enrollment.status].icon;
+                      return <StatusIcon className="h-3 w-3" />;
+                    })()}
                     {t.student.enrollments.statusLabels[enrollment.status]}
                   </span>
                 </div>

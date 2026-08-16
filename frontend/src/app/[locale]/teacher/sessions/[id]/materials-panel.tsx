@@ -55,9 +55,15 @@ export default function MaterialsPanel({
 
   return (
     <div className="panel animate-fade-up" style={{ animationDelay: '160ms' }}>
-      <div className="flex items-center justify-between gap-3">
+      {/* Titre et action côte à côte dès `sm` ; empilés en dessous, sinon les
+          deux libellés se coupent en deux lignes sur un téléphone étroit. */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h3 className="text-lg font-semibold text-ink">{t.teacher.session.materials.title}</h3>
-        <button type="button" onClick={() => setShowForm((v) => !v)} className="btn-secondary">
+        <button
+          type="button"
+          onClick={() => setShowForm((v) => !v)}
+          className="btn-secondary w-full sm:w-auto"
+        >
           {t.teacher.session.materials.addButton}
         </button>
       </div>

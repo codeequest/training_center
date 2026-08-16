@@ -26,8 +26,22 @@ export default async function LoginPage({ params }: { params: Promise<{ locale: 
   const t = getDictionary(locale);
 
   return (
-    <div className="bg-slate-50 py-16 sm:py-24">
-      <div className="container-page max-w-md">
+    // Bande dégradée courte plutôt qu'un aplat gris : la carte de connexion
+    // vient se poser sur la couture, comme les cartes de la page contact.
+    <div className="relative overflow-hidden bg-slate-50 py-16 sm:py-24">
+      {/* Bande dégradée cantonnée au haut de page : la carte la chevauche,
+          le reste retombe sur le gris de fond habituel. */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 top-0 h-72 bg-gradient-to-b from-brand-900 to-slate-50"
+      />
+      <MotionDiv
+        aria-hidden
+        className="pointer-events-none absolute left-1/2 top-0 h-72 w-72 -translate-x-1/2 rounded-full bg-brand-500/20 blur-3xl"
+        animate={{ opacity: [0.6, 1, 0.6] }}
+        transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
+      />
+      <div className="container-page relative z-10 max-w-md">
         <MotionDiv
           initial={{ opacity: 0, y: 16, scale: 0.98 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -49,7 +63,7 @@ export default async function LoginPage({ params }: { params: Promise<{ locale: 
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
-          className="mt-6 rounded-xl border border-slate-200 bg-white p-6"
+          className="mt-6 rounded-xl border border-slate-200 border-l-4 border-l-brand-500 bg-white p-6 shadow-sm"
         >
           <h2 className="text-sm font-semibold text-ink">{t.login.noAccountTitle}</h2>
           <p className="mt-2 text-sm leading-relaxed text-ink-muted">{t.login.noAccountBody}</p>

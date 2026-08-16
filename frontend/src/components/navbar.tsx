@@ -189,21 +189,38 @@ export default function Navbar({ locale, t }: NavbarProps) {
           aria-label={isOpen ? t.nav.closeMenu : t.nav.openMenu}
           className="grid h-10 w-10 place-items-center rounded-lg border border-slate-300 text-ink md:hidden"
         >
+          {/*
+            Les trois barres sont animées en rotation/translation, jamais par
+            interpolation de l'attribut `d` : framer-motion morphe les chemins
+            token par token, si bien que deux `d` de longueurs différentes
+            produisent un chemin intermédiaire invalide.
+          */}
           <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-            <motion.path
-              d="M4 7h16"
-              animate={isOpen ? { d: 'm5 5 14 14', opacity: 1 } : { d: 'M4 7h16', opacity: 1 }}
-              transition={{ duration: 0.2 }}
+            <motion.line
+              x1="4"
+              y1="7"
+              x2="20"
+              y2="7"
+              style={{ transformOrigin: '12px 12px' }}
+              animate={isOpen ? { y: 5, rotate: 45 } : { y: 0, rotate: 0 }}
+              transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
             />
-            <motion.path
-              d="M4 12h16"
+            <motion.line
+              x1="4"
+              y1="12"
+              x2="20"
+              y2="12"
               animate={isOpen ? { opacity: 0 } : { opacity: 1 }}
               transition={{ duration: 0.15 }}
             />
-            <motion.path
-              d="M4 17h16"
-              animate={isOpen ? { d: 'm19 5-14 14', opacity: 1 } : { d: 'M4 17h16', opacity: 1 }}
-              transition={{ duration: 0.2 }}
+            <motion.line
+              x1="4"
+              y1="17"
+              x2="20"
+              y2="17"
+              style={{ transformOrigin: '12px 12px' }}
+              animate={isOpen ? { y: -5, rotate: -45 } : { y: 0, rotate: 0 }}
+              transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
             />
           </svg>
         </button>
@@ -241,25 +258,31 @@ export default function Navbar({ locale, t }: NavbarProps) {
               ))}
             </ul>
 
-            <div className="container-page flex items-center justify-between gap-3 border-t border-slate-100 py-4">
+            {/*
+              Sur les petits écrans, langue + compte + déconnexion sur une même
+              ligne forcent le retour à la ligne au milieu des libellés. Les deux
+              groupes sont donc empilés, et les actions occupent toute la largeur
+              — cibles tactiles plus confortables au passage.
+            */}
+            <div className="container-page flex flex-col gap-4 border-t border-slate-100 py-4">
               <div className="flex items-center gap-2">
                 <LocaleSwitcher current={locale} hrefFor={localeHref} label={t.nav.languageLabel} />
                 {session.status === 'authed' && <NotificationBell locale={locale} t={t.notifications} />}
               </div>
               {session.status === 'checking' ? (
-                <span aria-hidden className="h-10 w-28 animate-pulse rounded-lg bg-slate-100" />
+                <span aria-hidden className="h-11 w-full animate-pulse rounded-lg bg-slate-100" />
               ) : session.status === 'authed' ? (
                 <div className="flex items-center gap-2">
                   <Link
                     href={accountHref(locale, session.user.role)}
-                    className="rounded-lg bg-brand-700 px-4 py-2.5 text-sm font-semibold text-white"
+                    className="flex-1 whitespace-nowrap rounded-lg bg-brand-700 px-4 py-3 text-center text-sm font-semibold text-white"
                   >
                     {t.nav.myAccount}
                   </Link>
                   <button
                     type="button"
                     onClick={logout}
-                    className="rounded-lg px-3 py-2.5 text-sm font-medium text-ink-muted"
+                    className="whitespace-nowrap rounded-lg border border-slate-300 px-4 py-3 text-sm font-medium text-ink-muted"
                   >
                     {t.nav.logout}
                   </button>
@@ -267,7 +290,7 @@ export default function Navbar({ locale, t }: NavbarProps) {
               ) : (
                 <Link
                   href={`/${locale}/login`}
-                  className="rounded-lg bg-brand-700 px-4 py-2.5 text-sm font-semibold text-white"
+                  className="block whitespace-nowrap rounded-lg bg-brand-700 px-4 py-3 text-center text-sm font-semibold text-white"
                 >
                   {t.nav.login}
                 </Link>

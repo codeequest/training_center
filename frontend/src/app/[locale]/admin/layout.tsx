@@ -123,7 +123,18 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
             </div>
           </div>
 
-          <nav className="container-page flex gap-1 overflow-x-auto pb-3">
+          {/*
+            Sept onglets débordent sous `sm` : le dégradé de masque sur le bord
+            droit signale qu'il reste des onglets à faire défiler, au lieu de
+            les couper net sur le fond blanc.
+          */}
+          <nav
+            className="container-page flex gap-1 overflow-x-auto pb-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            style={{
+              maskImage: 'linear-gradient(to right, black calc(100% - 28px), transparent)',
+              WebkitMaskImage: 'linear-gradient(to right, black calc(100% - 28px), transparent)',
+            }}
+          >
             {navItems.map((item) => {
               const active = isActive(item.href, item.exact);
               const Icon = item.icon;
@@ -131,7 +142,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`inline-flex shrink-0 items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition-colors ${
+                  className={`inline-flex shrink-0 items-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold transition-colors ${
                     active ? 'bg-genai-700 text-white' : 'bg-slate-100 text-ink-muted hover:bg-slate-200'
                   }`}
                 >
